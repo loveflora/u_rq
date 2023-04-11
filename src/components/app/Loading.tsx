@@ -1,13 +1,16 @@
 import { Spinner, Text } from '@chakra-ui/react';
 import { ReactElement } from 'react';
-import { useIsFetching } from 'react-query';
+import { useIsFetching, useIsMutating } from 'react-query';
 
 export function Loading(): ReactElement {
   // will use React Query `useIsFetching` to determine whether or not to display
   const isFetching = useIsFetching();
   // 현재 가져오기 상태인 쿼리 호출의 수를 나타내는 정수값을 반환
 
-  const display = isFetching ? 'inherit' : 'none';
+  const isMutating = useIsMutating();
+  // 변이함수 개수를 나타내는 정수값을 반환
+
+  const display = isFetching || isMutating ? 'inherit' : 'none';
   // truthy = 1 이상
   // falsy = 0
 

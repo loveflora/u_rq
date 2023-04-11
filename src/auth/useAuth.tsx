@@ -5,6 +5,7 @@ import { axiosInstance } from '../axiosInstance';
 import { useCustomToast } from '../components/app/hooks/useCustomToast';
 import { useUser } from '../components/user/hooks/useUser';
 
+// useUser 훅이 서버와 통신하도록
 interface UseAuth {
   signin: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
@@ -46,8 +47,9 @@ export function useAuth(): UseAuth {
           status: 'info',
         });
 
+        // 성공적으로 인증되었을 경우, 캐시에 사용자 정보 업데이트
         // update stored user data
-        updateUser(data.user);
+        updateUser(data.user); // 쿼리 캐시 값이 설정된 user를 인수로 가짐.
       }
     } catch (errorResponse) {
       const title =
@@ -71,7 +73,7 @@ export function useAuth(): UseAuth {
 
   function signout(): void {
     // clear user from stored user data
-    clearUser();
+    clearUser(); // 쿼리 캐시를 null로 설정하기 때문에 인수를 취하지 않음.
     toast({
       title: 'Logged out!',
       status: 'info',
