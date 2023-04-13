@@ -71,7 +71,7 @@ export function useUser(): UseUser {
   );
 
   // useAuth : 쿼리 캐시에 값을 설정 -> 그래야 useQuery 함수 실행할 때 사용할 값이 생김
-  // meant to be called from useAuth - setQueryData 호출 (quertClient 필요)
+  // meant to be called from useAuth - setQueryData 호출 (queryClient 필요)
   // updateUser : 사용자 데이터 가져와서 state 설정
   function updateUser(newUser: User): void {
     // // set user in state

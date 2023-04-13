@@ -1,5 +1,6 @@
 import jsonpatch from 'fast-json-patch';
-import { UseMutateFunction, useMutation } from 'react-query';
+import { UseMutateFunction, useMutation, useQueryClient } from 'react-query';
+import { queryKeys } from 'react-query/constants';
 
 import type { User } from '../../../../../shared/types';
 import { axiosInstance, getJWTHeader } from '../../../axiosInstance';
@@ -37,6 +38,7 @@ export function usePatchUser(): UseMutateFunction<
 > {
   const { user, updateUser } = useUser();
   const toast = useCustomToast();
+  const queryClient = useQueryClient();
 
   // useMutation 호출해서 mutate 함수를 구조분해
   // mutate 는 newUserData 를 인수로 받아, patchUserOnServer 로 전달 (useUser 훅에 있던 원본 사용자 데이터와 함께)
@@ -50,9 +52,25 @@ export function usePatchUser(): UseMutateFunction<
       onMutate: async (newData: User | null) => {
         // cancel any outgoing queries for user data,
         // so old server data doesn't overwrite our optimistic update
+        queryClient.cancelQueries(queryKeys.user);
         // snapshot of previous user value
+        const previousUserData: User = queryClient.getQueryData(queryKeys.user);
         // optimistically update the cache with new value
+        // 변이함수로 전달된 모든 데이터는 onMutate 함수로 전달됨
+        updateUser(newData);
         // return context object with snapshotted value
+        return { previousUserData };
+      },
+      onError: (error, newData, previousUserDataContent) => {
+        // rollback cache to saved value
+        if (previousUserDataContent.previousUserData) {
+          // 기존 값에 다시 updateUser 실행
+          updateUser(previousUserDataContent.previousUserData);
+          toast({
+            title: 'Update failed: restoring previous value',
+            status: 'warning',
+          });
+        }
       },
       // 서버에서 받은 응답으로 -> 사용자를 업데이트
       // onSuccess 는 변이함수에서 반환된 모든 값을 인자로 받음
@@ -68,6 +86,12 @@ export function usePatchUser(): UseMutateFunction<
         }
         // 변이함수에서 얻은 응답을 가져와서 updateUser에 전달
         // => updateUser 은 user 훅의 state 와 localStorage 에 저장된 user 를 update 하고 queryClient 캐시도 update
+      },
+      // onSettled : 변이를 resolve 했을 경우, 성공여부와 관계 없이 onSettled 실행
+      onSettled: () => {
+        // invalidate user query to make sure we're in sync with server data
+        // query 가 무효화되면, re-fetch 실행하여 데이터가 모두 서버측과 동일하게 해줄 거임.
+        queryClient.invalidateQueries(queryKeys.user);
       },
     },
   );

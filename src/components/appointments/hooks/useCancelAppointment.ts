@@ -25,7 +25,7 @@ export function useCancelAppointment(): UseMutateFunction<
   Appointment, // 인수는 Appointment 유형임.
   unknown // onMutate 의 context 는 unknown (context 가 없기 때문. onMutate 함수를 실행하지 않음.)
 > {
-  const quertClient = useQueryClient();
+  const queryClient = useQueryClient();
   const toast = useCustomToast();
 
   // mutate : useCancelAppointment 훅 사용자에게 전달할 내용
@@ -37,7 +37,7 @@ export function useCancelAppointment(): UseMutateFunction<
     {
       onSuccess: () => {
         // 1) queryKeys.appointments 로 시작하는 모든 쿼리키를 무효화 => 이번 달 예약과 사용자 예약이 포함됨.
-        quertClient.invalidateQueries([queryKeys.appointments]);
+        queryClient.invalidateQueries([queryKeys.appointments]);
         // 2) toast : 예약이 취소되었음을 확인
         toast({
           title: 'You have canceled the appointment !',
